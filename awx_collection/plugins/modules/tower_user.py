@@ -5,11 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 
 DOCUMENTATION = '''
@@ -148,19 +149,19 @@ def main():
 
     # Create the data that gets sent for create and update
     new_fields = {}
-    if username is not None:
+    if username:
         new_fields['username'] = module.get_item_name(existing_item) if existing_item else username
-    if first_name is not None:
+    if first_name:
         new_fields['first_name'] = first_name
-    if last_name is not None:
+    if last_name:
         new_fields['last_name'] = last_name
-    if email is not None:
+    if email:
         new_fields['email'] = email
-    if is_superuser is not None:
+    if is_superuser:
         new_fields['is_superuser'] = is_superuser
-    if is_system_auditor is not None:
+    if is_system_auditor:
         new_fields['is_system_auditor'] = is_system_auditor
-    if password is not None:
+    if password:
         new_fields['password'] = password
 
     # If the state was present and we can let the module build or update the existing item, this will return on its own

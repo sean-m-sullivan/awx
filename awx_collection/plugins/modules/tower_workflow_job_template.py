@@ -6,11 +6,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 DOCUMENTATION = '''
 ---
@@ -31,14 +32,6 @@ options:
       description:
         - Setting this option will change the existing name.
       type: str
-    copy_from:
-      description:
-        - Name or id to copy the workflow job template from.
-        - This will copy an existing workflow job template and change any parameters supplied.
-        - The new workflow job template name will be the one provided in the name parameter.
-        - The organization parameter is not used in this, to facilitate copy from one organization to another.
-        - Provide the id or use the lookup plugin to provide the id if multiple workflow job templates share the same name.
-      type: str
     description:
       description:
         - Optional description of this workflow job template.
@@ -47,10 +40,6 @@ options:
       description:
         - Variables which will be made available to jobs ran inside the workflow.
       type: dict
-    execution_environment:
-      description:
-        - Execution Environment to use for the WFJT.
-      type: str
     organization:
       description:
         - Organization the workflow job template exists in.
@@ -153,12 +142,6 @@ EXAMPLES = '''
     name: example-workflow
     description: created by Ansible Playbook
     organization: Default
-
-- name: Copy a workflow job template
-  tower_workflow_job_template:
-    name: copy-workflow
-    copy_from: example-workflow
-    organization: Foo
 '''
 
 from ..module_utils.tower_api import TowerAPIModule
@@ -168,15 +151,7 @@ import json
 
 def update_survey(module, last_request):
     spec_endpoint = last_request.get('related', {}).get('survey_spec')
-    if module.params.get('survey_spec') == {}:
-        response = module.delete_endpoint(spec_endpoint)
-        if response['status_code'] != 200:
-            # Not sure how to make this actually return a non 200 to test what to dump in the respinse
-            module.fail_json(msg="Failed to delete survey: {0}".format(response['json']))
-    else:
-        response = module.post_endpoint(spec_endpoint, **{'data': module.params.get('survey_spec')})
-        if response['status_code'] != 200:
-            module.fail_json(msg="Failed to update survey: {0}".format(response['json']['error']))
+    module.post_endpoint(spec_endpoint, **{'data': module.params.get('survey_spec')})
     module.exit_json(**module.json_output)
 
 
@@ -185,11 +160,9 @@ def main():
     argument_spec = dict(
         name=dict(required=True),
         new_name=dict(),
-        copy_from=dict(),
         description=dict(),
         extra_vars=dict(type='dict'),
         organization=dict(),
-        execution_environment=dict(),
         survey_spec=dict(type='dict', aliases=['survey']),
         survey_enabled=dict(type='bool'),
         allow_simultaneous=dict(type='bool'),
@@ -216,7 +189,6 @@ def main():
     # Extract our parameters
     name = module.params.get('name')
     new_name = module.params.get("new_name")
-    copy_from = module.params.get('copy_from')
     state = module.params.get('state')
 
     new_fields = {}
@@ -228,24 +200,8 @@ def main():
         organization_id = module.resolve_name_to_id('organizations', organization)
         search_fields['organization'] = new_fields['organization'] = organization_id
 
-    ee = module.params.get('execution_environment')
-    if ee:
-        new_fields['execution_environment'] = module.resolve_name_to_id('execution_environments', ee)
-
     # Attempt to look up an existing item based on the provided data
     existing_item = module.get_one('workflow_job_templates', name_or_id=name, **{'data': search_fields})
-
-    # Attempt to look up credential to copy based on the provided name
-    if copy_from:
-        # a new existing item is formed when copying and is returned.
-        existing_item = module.copy_item(
-            existing_item,
-            copy_from,
-            name,
-            endpoint='workflow_job_templates',
-            item_type='workflow_job_template',
-            copy_lookup_data={},
-        )
 
     if state == 'absent':
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
@@ -262,18 +218,10 @@ def main():
     # Create the data that gets sent for create and update
     new_fields['name'] = new_name if new_name else (module.get_item_name(existing_item) if existing_item else name)
     for field_name in (
-        'description',
-        'survey_enabled',
-        'allow_simultaneous',
-        'limit',
-        'scm_branch',
-        'extra_vars',
-        'ask_inventory_on_launch',
-        'ask_scm_branch_on_launch',
-        'ask_limit_on_launch',
-        'ask_variables_on_launch',
-        'webhook_service',
-    ):
+            'description', 'survey_enabled', 'allow_simultaneous',
+            'limit', 'scm_branch', 'extra_vars',
+            'ask_inventory_on_launch', 'ask_scm_branch_on_launch', 'ask_limit_on_launch', 'ask_variables_on_launch',
+            'webhook_service',):
         field_val = module.params.get(field_name)
         if field_val:
             new_fields[field_name] = field_val
@@ -312,12 +260,12 @@ def main():
         association_fields['labels'] = []
         for item in labels:
             association_fields['labels'].append(module.resolve_name_to_id('labels', item))
-    # Code to use once Issue #7567 is resolved
-    #            search_fields = {'name': item}
-    #            if organization:
-    #                search_fields['organization'] = organization_id
-    #            label_id = module.get_one('labels', **{'data': search_fields})
-    #            association_fields['labels'].append(label_id)
+# Code to use once Issue #7567 is resolved
+#            search_fields = {'name': item}
+#            if organization:
+#                search_fields['organization'] = organization_id
+#            label_id = module.get_one('labels', **{'data': search_fields})
+#            association_fields['labels'].append(label_id)
 
     on_change = None
     new_spec = module.params.get('survey_spec')
@@ -334,13 +282,10 @@ def main():
 
     # If the state was present and we can let the module build or update the existing item, this will return on its own
     module.create_or_update_if_needed(
-        existing_item,
-        new_fields,
-        endpoint='workflow_job_templates',
-        item_type='workflow_job_template',
+        existing_item, new_fields,
+        endpoint='workflow_job_templates', item_type='workflow_job_template',
         associations=association_fields,
-        on_create=on_change,
-        on_update=on_change,
+        on_create=on_change, on_update=on_change
     )
 
 

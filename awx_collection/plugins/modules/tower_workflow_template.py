@@ -5,11 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'status': ['deprecated'], 'supported_by': 'community', 'metadata_version': '1.1'}
+ANSIBLE_METADATA = {'status': ['deprecated'],
+                    'supported_by': 'community',
+                    'metadata_version': '1.1'}
 
 
 DOCUMENTATION = '''
@@ -107,7 +108,11 @@ EXAMPLES = '''
 RETURN = ''' # '''
 
 
-from ..module_utils.tower_legacy import TowerLegacyModule, tower_auth_config, tower_check_mode
+from ..module_utils.tower_legacy import (
+    TowerLegacyModule,
+    tower_auth_config,
+    tower_check_mode
+)
 
 import json
 
@@ -135,16 +140,16 @@ def main():
         state=dict(choices=['present', 'absent'], default='present'),
     )
 
-    module = TowerLegacyModule(argument_spec=argument_spec, supports_check_mode=False)
-
-    module.deprecate(
-        msg=(
-            "This module is replaced by the combination of tower_workflow_job_template and "
-            "tower_workflow_job_template_node. This uses the old tower-cli and wll be "
-            "removed in 2022."
-        ),
-        version='awx.awx:14.0.0',
+    module = TowerLegacyModule(
+        argument_spec=argument_spec,
+        supports_check_mode=False
     )
+
+    module.deprecate(msg=(
+        "This module is replaced by the combination of tower_workflow_job_template and "
+        "tower_workflow_job_template_node. This uses the old tower-cli and wll be "
+        "removed in 2022."
+    ), version='awx.awx:14.0.0')
 
     name = module.params.get('name')
     state = module.params.get('state')
@@ -154,7 +159,10 @@ def main():
         schema = module.params.get('schema')
 
     if schema and state == 'absent':
-        module.fail_json(msg='Setting schema when state is absent is not allowed', changed=False)
+        module.fail_json(
+            msg='Setting schema when state is absent is not allowed',
+            changed=False
+        )
 
     json_output = {'workflow_template': name, 'state': state}
 
@@ -171,10 +179,15 @@ def main():
         if module.params.get('organization'):
             organization_res = tower_cli.get_resource('organization')
             try:
-                organization = organization_res.get(name=module.params.get('organization'))
+                organization = organization_res.get(
+                    name=module.params.get('organization'))
                 params['organization'] = organization['id']
             except exc.NotFound as excinfo:
-                module.fail_json(msg='Failed to update organization source,' 'organization not found: {0}'.format(excinfo), changed=False)
+                module.fail_json(
+                    msg='Failed to update organization source,'
+                    'organization not found: {0}'.format(excinfo),
+                    changed=False
+                )
 
         if module.params.get('survey'):
             params['survey_spec'] = module.params.get('survey')
@@ -185,7 +198,8 @@ def main():
         if module.params.get('ask_inventory'):
             params['ask_inventory_on_launch'] = module.params.get('ask_inventory')
 
-        for key in ('allow_simultaneous', 'inventory', 'survey_enabled', 'description'):
+        for key in ('allow_simultaneous', 'inventory',
+                    'survey_enabled', 'description'):
             if module.params.get(key):
                 params[key] = module.params.get(key)
 
@@ -205,13 +219,8 @@ def main():
                 params['fail_on_missing'] = False
                 result = wfjt_res.delete(**params)
         except (exc.ConnectionError, exc.BadRequest, exc.AuthError) as excinfo:
-            module.fail_json(
-                msg='Failed to update workflow template: \
-                    {0}'.format(
-                    excinfo
-                ),
-                changed=False,
-            )
+            module.fail_json(msg='Failed to update workflow template: \
+                    {0}'.format(excinfo), changed=False)
 
     json_output['changed'] = result['changed']
     module.exit_json(**json_output)

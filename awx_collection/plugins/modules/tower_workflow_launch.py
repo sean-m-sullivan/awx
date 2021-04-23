@@ -4,10 +4,11 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 DOCUMENTATION = '''
 ---
@@ -151,17 +152,15 @@ def main():
         'inventory': 'ask_inventory_on_launch',
         'limit': 'ask_limit_on_launch',
         'scm_branch': 'ask_scm_branch_on_launch',
+        'extra_vars': 'ask_variables_on_launch',
     }
 
     param_errors = []
     for variable_name in check_vars_to_prompts:
         if variable_name in post_data and not workflow_job_template[check_vars_to_prompts[variable_name]]:
             param_errors.append("The field {0} was specified but the workflow job template does not allow for it to be overridden".format(variable_name))
-    # Check if Either ask_variables_on_launch, or survey_enabled is enabled for use of extra vars.
-    if module.params.get('extra_vars') and not (workflow_job_template['ask_variables_on_launch'] or workflow_job_template['survey_enabled']):
-        param_errors.append("The field extra_vars was specified but the workflow job template does not allow for it to be overridden")
     if len(param_errors) > 0:
-        module.fail_json(msg="Parameters specified which can not be passed into workflow job template, see errors for details", errors=param_errors)
+        module.fail_json(msg="Parameters specified which can not be passed into wotkflow job template, see errors for details", errors=param_errors)
 
     # Launch the job
     result = module.post_endpoint(workflow_job_template['related']['launch'], data=post_data)
@@ -179,7 +178,12 @@ def main():
         module.exit_json(**module.json_output)
 
     # Invoke wait function
-    module.wait_on_url(url=result['json']['url'], object_name=name, object_type='Workflow Job', timeout=timeout, interval=interval)
+    module.wait_on_url(
+        url=result['json']['url'],
+        object_name=name,
+        object_type='Workflow Job',
+        timeout=timeout, interval=interval
+    )
 
     module.exit_json(**module.json_output)
 

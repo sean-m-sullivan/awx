@@ -31,7 +31,7 @@ options:
         - Whether or not the EULA is accepted.
       required: True
       type: bool
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 RETURN = ''' # '''

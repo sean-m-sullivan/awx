@@ -64,7 +64,7 @@ options:
         - Set True to skip authorization step for completely trusted applications.
       type: bool
 
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 

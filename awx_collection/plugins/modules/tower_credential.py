@@ -186,7 +186,7 @@ options:
       default: "present"
       type: str
 
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 
 notes:
   - Values `inputs` and the other deprecated fields (such as `tenant`) are replacements of existing values.
@@ -361,9 +361,9 @@ def main():
     # Deprication warnings
     for legacy_input in OLD_INPUT_NAMES:
         if module.params.get(legacy_input) is not None:
-            module.deprecate(msg='{0} parameter has been deprecated, please use inputs instead'.format(legacy_input), version="ansible.tower:4.0.0")
+            module.deprecate(msg='{0} parameter has been deprecated, please use inputs instead'.format(legacy_input), version="awx.awx:4.0.0")
     if kind:
-        module.deprecate(msg='The kind parameter has been deprecated, please use credential_type instead', version="ansible.tower:4.0.0")
+        module.deprecate(msg='The kind parameter has been deprecated, please use credential_type instead', version="awx.awx:4.0.0")
 
     cred_type_id = module.resolve_name_to_id('credential_types', credential_type if credential_type else KIND_CHOICES[kind])
     if organization:

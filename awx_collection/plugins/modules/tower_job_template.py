@@ -276,7 +276,7 @@ options:
       type: list
       elements: str
 
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 
 notes:
   - JSON for survey_spec can be found in Tower API Documentation. See

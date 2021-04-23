@@ -19,7 +19,7 @@ description:
       the path in the command would be /path/to/tower_inventory.(yml|yaml). If some arguments in the config file
       are missing, this plugin will try to fill in missing arguments by reading from environment variables.
     - If reading configurations from environment variables, the path in the command must be @tower_inventory.
-extends_documentation_fragment: ansible.tower.auth_plugin
+extends_documentation_fragment: awx.awx.auth_plugin
 options:
     inventory_id:
         description:
@@ -80,7 +80,7 @@ def handle_error(**kwargs):
 
 
 class InventoryModule(BaseInventoryPlugin):
-    NAME = 'ansible.tower.tower'  # REPLACE
+    NAME = 'awx.awx.tower'  # REPLACE
     # Stays backward compatible with tower inventory script.
     # If the user supplies '@tower_inventory' as path, the plugin will read from environment variables.
     no_config_file_supplied = False

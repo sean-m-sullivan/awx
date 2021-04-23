@@ -38,7 +38,7 @@ options:
       type: dict
 requirements:
   - pyyaml
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 EXAMPLES = '''

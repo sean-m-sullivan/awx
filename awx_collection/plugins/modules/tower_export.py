@@ -75,7 +75,7 @@ requirements:
   - "awxkit >= 9.3.0"
 notes:
   - Specifying a name of "all" for any asset type will export all items of that asset type.
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 EXAMPLES = '''

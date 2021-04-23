@@ -43,7 +43,7 @@ options:
         - Maximum time in seconds to wait for a job to finish.
         - Not specifying means the task will wait until Tower cancels the command.
       type: int
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 EXAMPLES = '''

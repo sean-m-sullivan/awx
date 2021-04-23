@@ -76,7 +76,7 @@ options:
       choices: ["present", "absent"]
       type: str
 
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 

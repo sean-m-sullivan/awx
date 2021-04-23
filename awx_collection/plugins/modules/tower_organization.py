@@ -72,7 +72,7 @@ options:
         - list of Ansible Galaxy credentials to associate to the organization
       type: list
       elements: str
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 

@@ -97,7 +97,7 @@ options:
         - If waiting for the job to complete this will abort after this
           amount of seconds
       type: int
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 EXAMPLES = '''

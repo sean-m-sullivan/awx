@@ -31,7 +31,7 @@ options:
       type: dict
 requirements:
   - "awxkit >= 9.3.0"
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 EXAMPLES = '''

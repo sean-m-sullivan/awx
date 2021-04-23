@@ -58,7 +58,7 @@ oauth_token = LEdCpKVKc4znzffcpQL5vLG8oyeku6
 
 ## Release and Upgrade Notes
 
-Notable releases of the `ansible.tower` collection:
+Notable releases of the `awx.awx` collection:
 
  - 3.7.0 initial release
 

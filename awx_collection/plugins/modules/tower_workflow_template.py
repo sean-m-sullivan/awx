@@ -88,7 +88,7 @@ options:
 requirements:
 - ansible-tower-cli >= 3.0.2
 
-extends_documentation_fragment: ansible.tower.auth_legacy
+extends_documentation_fragment: awx.awx.auth_legacy
 '''
 
 

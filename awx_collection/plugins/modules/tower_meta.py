@@ -21,7 +21,7 @@ description:
     - Allows a user to find out what collection this module exists in.
     - This takes common module parameters, but does nothing with them.
 options: {}
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 

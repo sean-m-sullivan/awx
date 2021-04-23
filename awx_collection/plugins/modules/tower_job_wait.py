@@ -48,7 +48,7 @@ options:
       description:
         - Maximum time in seconds to wait for a job to finish.
       type: int
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 EXAMPLES = '''
@@ -126,7 +126,7 @@ def main():
             interval = abs((min_interval + max_interval) / 2)
         module.deprecate(
             msg="Min and max interval have been deprecated, please use interval instead; interval will be set to {0}".format(interval),
-            version="ansible.tower:4.0.0"
+            version="awx.awx:4.0.0"
         )
 
     # Attempt to look up job based on the provided id

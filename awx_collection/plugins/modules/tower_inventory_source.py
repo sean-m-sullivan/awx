@@ -132,7 +132,7 @@ options:
       description:
         - Name of the inventory source's inventory's organization.
       type: str
-extends_documentation_fragment: ansible.tower.auth
+extends_documentation_fragment: awx.awx.auth
 '''
 
 EXAMPLES = '''

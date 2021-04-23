@@ -59,7 +59,7 @@ requirements:
   - six.moves.StringIO
   - sys
 
-extends_documentation_fragment: ansible.tower.auth_legacy
+extends_documentation_fragment: awx.awx.auth_legacy
 '''
 
 EXAMPLES = '''

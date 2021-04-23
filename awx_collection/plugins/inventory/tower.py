@@ -1,7 +1,7 @@
 # Copyright (c) 2018 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
-from __future__ import absolute_import, division, print_function
+from __future__ import (absolute_import, division, print_function)
 
 __metaclass__ = type
 
@@ -19,7 +19,7 @@ description:
       the path in the command would be /path/to/tower_inventory.(yml|yaml). If some arguments in the config file
       are missing, this plugin will try to fill in missing arguments by reading from environment variables.
     - If reading configurations from environment variables, the path in the command must be @tower_inventory.
-extends_documentation_fragment: awx.awx.auth_plugin
+extends_documentation_fragment: ansible.tower.auth_plugin
 options:
     inventory_id:
         description:
@@ -80,7 +80,7 @@ def handle_error(**kwargs):
 
 
 class InventoryModule(BaseInventoryPlugin):
-    NAME = 'awx.awx.tower'  # REPLACE
+    NAME = 'ansible.tower.tower'  # REPLACE
     # Stays backward compatible with tower inventory script.
     # If the user supplies '@tower_inventory' as path, the plugin will read from environment variables.
     no_config_file_supplied = False
@@ -109,7 +109,10 @@ class InventoryModule(BaseInventoryPlugin):
             if opt_val is not None:
                 module_params[module_param] = opt_val
 
-        module = TowerAPIModule(argument_spec={}, direct_params=module_params, error_callback=handle_error, warn_callback=self.warn_callback)
+        module = TowerAPIModule(
+            argument_spec={}, direct_params=module_params,
+            error_callback=handle_error, warn_callback=self.warn_callback
+        )
 
         # validate type of inventory_id because we allow two types as special case
         inventory_id = self.get_option('inventory_id')
@@ -120,12 +123,15 @@ class InventoryModule(BaseInventoryPlugin):
                 inventory_id = ensure_type(inventory_id, 'str')
             except ValueError as e:
                 raise AnsibleOptionsError(
-                    'Invalid type for configuration option inventory_id, ' 'not integer, and cannot convert to string: {err}'.format(err=to_native(e))
+                    'Invalid type for configuration option inventory_id, '
+                    'not integer, and cannot convert to string: {err}'.format(err=to_native(e))
                 )
         inventory_id = inventory_id.replace('/', '')
         inventory_url = '/api/v2/inventories/{inv_id}/script/'.format(inv_id=inventory_id)
 
-        inventory = module.get_endpoint(inventory_url, data={'hostvars': '1', 'towervars': '1', 'all': '1'})['json']
+        inventory = module.get_endpoint(
+            inventory_url, data={'hostvars': '1', 'towervars': '1', 'all': '1'}
+        )['json']
 
         # To start with, create all the groups.
         for group_name in inventory:
@@ -147,8 +153,6 @@ class InventoryModule(BaseInventoryPlugin):
                     self.inventory.add_host(host_name, group_name)
                 # Then add the parent-children group relationships.
                 for child_group_name in group_content.get('children', []):
-                    # add the child group to groups, if its already there it will just throw a warning
-                    self.inventory.add_group(child_group_name)
                     self.inventory.add_child(group_name, child_group_name)
             # Set the group vars. Note we should set group var for 'all', but not '_meta'.
             if group_name != '_meta':

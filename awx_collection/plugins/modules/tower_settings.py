@@ -5,11 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 
 DOCUMENTATION = '''
@@ -37,19 +38,19 @@ options:
       type: dict
 requirements:
   - pyyaml
-extends_documentation_fragment: awx.awx.auth
+extends_documentation_fragment: ansible.tower.auth
 '''
 
 EXAMPLES = '''
-- name: Set the value of AWX_ISOLATION_BASE_PATH
+- name: Set the value of AWX_PROOT_BASE_PATH
   tower_settings:
-    name: AWX_ISOLATION_BASE_PATH
+    name: AWX_PROOT_BASE_PATH
     value: "/tmp"
   register: testing_settings
 
-- name: Set the value of AWX_ISOLATION_SHOW_PATHS
+- name: Set the value of AWX_PROOT_SHOW_PATHS
   tower_settings:
-    name: "AWX_ISOLATION_SHOW_PATHS"
+    name: "AWX_PROOT_SHOW_PATHS"
     value: "'/var/lib/awx/projects/', '/tmp'"
   register: testing_settings
 
@@ -73,7 +74,6 @@ from ..module_utils.tower_api import TowerAPIModule
 
 try:
     import yaml
-
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
@@ -84,7 +84,11 @@ def coerce_type(module, value):
     if value is None:
         return value
 
-    yaml_ish = bool((value.startswith('{') and value.endswith('}')) or (value.startswith('[') and value.endswith(']')))
+    yaml_ish = bool((
+        value.startswith('{') and value.endswith('}')
+    ) or (
+        value.startswith('[') and value.endswith(']'))
+    )
     if yaml_ish:
         if not HAS_YAML:
             module.fail_json(msg="yaml is not installed, try 'pip install pyyaml'")
@@ -111,7 +115,7 @@ def main():
         argument_spec=argument_spec,
         required_one_of=[['name', 'settings']],
         mutually_exclusive=[['name', 'settings']],
-        required_if=[['name', 'present', ['value']]],
+        required_if=[['name', 'present', ['value']]]
     )
 
     # Extract our parameters
@@ -129,7 +133,7 @@ def main():
     existing_settings = module.get_endpoint('settings/all')['json']
 
     # Begin a json response
-    json_output = {'changed': False, 'old_values': {}, 'new_values': {}}
+    json_response = {'changed': False, 'old_values': {}}
 
     # Check any of the settings to see if anything needs to be updated
     needs_update = False
@@ -137,26 +141,18 @@ def main():
         if a_setting not in existing_settings or existing_settings[a_setting] != new_settings[a_setting]:
             # At least one thing is different so we need to patch
             needs_update = True
-            json_output['old_values'][a_setting] = existing_settings[a_setting]
-            json_output['new_values'][a_setting] = new_settings[a_setting]
-
-    if module._diff:
-        json_output['diff'] = {'before': json_output['old_values'], 'after': json_output['new_values']}
+            json_response['old_values'][a_setting] = existing_settings[a_setting]
 
     # If nothing needs an update we can simply exit with the response (as not changed)
     if not needs_update:
-        module.exit_json(**json_output)
-
-    if module.check_mode and module._diff:
-        json_output['changed'] = True
-        module.exit_json(**json_output)
+        module.exit_json(**json_response)
 
     # Make the call to update the settings
     response = module.patch_endpoint('settings/all', **{'data': new_settings})
 
     if response['status_code'] == 200:
         # Set the changed response to True
-        json_output['changed'] = True
+        json_response['changed'] = True
 
         # To deal with the old style values we need to return 'value' in the response
         new_values = {}
@@ -165,11 +161,11 @@ def main():
 
         # If we were using a name we will just add a value of a string, otherwise we will return an array in values
         if name is not None:
-            json_output['value'] = new_values[name]
+            json_response['value'] = new_values[name]
         else:
-            json_output['values'] = new_values
+            json_response['values'] = new_values
 
-        module.exit_json(**json_output)
+        module.exit_json(**json_response)
     elif 'json' in response and '__all__' in response['json']:
         module.fail_json(msg=response['json']['__all__'])
     else:

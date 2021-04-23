@@ -5,11 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 
 DOCUMENTATION = '''
@@ -42,7 +43,7 @@ options:
         - Maximum time in seconds to wait for a job to finish.
         - Not specifying means the task will wait until Tower cancels the command.
       type: int
-extends_documentation_fragment: awx.awx.auth
+extends_documentation_fragment: ansible.tower.auth
 '''
 
 EXAMPLES = '''
@@ -84,14 +85,11 @@ def main():
     timeout = module.params.get('timeout')
 
     # Attempt to look up the command based on the provided name
-    command = module.get_one(
-        'ad_hoc_commands',
-        **{
-            'data': {
-                'id': command_id,
-            }
+    command = module.get_one('ad_hoc_commands', **{
+        'data': {
+            'id': command_id,
         }
-    )
+    })
 
     if command is None:
         module.fail_json(msg="Unable to find command with id {0}".format(command_id))

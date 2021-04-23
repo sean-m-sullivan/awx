@@ -5,11 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 DOCUMENTATION = '''
 ---
@@ -20,7 +21,7 @@ description:
     - Allows a user to find out what collection this module exists in.
     - This takes common module parameters, but does nothing with them.
 options: {}
-extends_documentation_fragment: awx.awx.auth
+extends_documentation_fragment: ansible.tower.auth
 '''
 
 
@@ -66,9 +67,17 @@ from ..module_utils.tower_api import TowerAPIModule
 
 def main():
     module = TowerAPIModule(argument_spec={})
-    namespace = {'awx': 'awx', 'tower': 'ansible'}.get(module._COLLECTION_TYPE, 'unknown')
+    namespace = {
+        'awx': 'awx',
+        'tower': 'ansible'
+    }.get(module._COLLECTION_TYPE, 'unknown')
     namespace_name = '{0}.{1}'.format(namespace, module._COLLECTION_TYPE)
-    module.exit_json(prefix=namespace_name, name=module._COLLECTION_TYPE, namespace=namespace, version=module._COLLECTION_VERSION)
+    module.exit_json(
+        prefix=namespace_name,
+        name=module._COLLECTION_TYPE,
+        namespace=namespace,
+        version=module._COLLECTION_VERSION
+    )
 
 
 if __name__ == '__main__':

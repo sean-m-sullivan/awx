@@ -5,11 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 
 DOCUMENTATION = '''
@@ -31,7 +32,7 @@ options:
         - Fail loudly if the I(job_id) can not be canceled
       default: False
       type: bool
-extends_documentation_fragment: awx.awx.auth
+extends_documentation_fragment: ansible.tower.auth
 '''
 
 EXAMPLES = '''
@@ -67,14 +68,11 @@ def main():
     fail_if_not_running = module.params.get('fail_if_not_running')
 
     # Attempt to look up the job based on the provided name
-    job = module.get_one(
-        'jobs',
-        **{
-            'data': {
-                'id': job_id,
-            }
+    job = module.get_one('jobs', **{
+        'data': {
+            'id': job_id,
         }
-    )
+    })
 
     if job is None:
         module.fail_json(msg="Unable to find job with id {0}".format(job_id))

@@ -6,11 +6,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 DOCUMENTATION = '''
 ---
@@ -43,7 +44,7 @@ options:
       default: "present"
       choices: ["present"]
       type: str
-extends_documentation_fragment: awx.awx.auth
+extends_documentation_fragment: ansible.tower.auth
 '''
 
 EXAMPLES = '''
@@ -79,15 +80,11 @@ def main():
         organization_id = module.resolve_name_to_id('organizations', organization)
 
     # Attempt to look up an existing item based on the provided data
-    existing_item = module.get_one(
-        'labels',
-        name_or_id=name,
-        **{
-            'data': {
-                'organization': organization_id,
-            }
+    existing_item = module.get_one('labels', name_or_id=name, **{
+        'data': {
+            'organization': organization_id,
         }
-    )
+    })
 
     # Create the data that gets sent for create and update
     new_fields = {}
@@ -95,7 +92,12 @@ def main():
     if organization:
         new_fields['organization'] = organization_id
 
-    module.create_or_update_if_needed(existing_item, new_fields, endpoint='labels', item_type='label', associations={})
+    module.create_or_update_if_needed(
+        existing_item, new_fields,
+        endpoint='labels', item_type='label',
+        associations={
+        }
+    )
 
 
 if __name__ == '__main__':

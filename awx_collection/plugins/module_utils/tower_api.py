@@ -1,13 +1,11 @@
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
-from .tower_module import TowerModule
+from . tower_module import TowerModule
 from ansible.module_utils.urls import Request, SSLValidationError, ConnectionError
 from ansible.module_utils.six import PY2
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils.six.moves.http_cookiejar import CookieJar
-from distutils.version import LooseVersion as Version
 import time
 from json import loads, dumps
 
@@ -15,8 +13,8 @@ from json import loads, dumps
 class TowerAPIModule(TowerModule):
     # TODO: Move the collection version check into tower_module.py
     # This gets set by the make process so whatever is in here is irrelevant
-    _COLLECTION_VERSION = "0.0.1-devel"
-    _COLLECTION_TYPE = "awx"
+    _COLLECTION_VERSION = "3.8.2"
+    _COLLECTION_TYPE = "tower"
     # This maps the collections type (awx/tower) to the values returned by the API
     # Those values can be found in awx/api/generics.py line 204
     collection_to_version = {
@@ -24,15 +22,18 @@ class TowerAPIModule(TowerModule):
         'tower': 'Red Hat Ansible Tower',
     }
     session = None
-    IDENTITY_FIELDS = {'users': 'username', 'workflow_job_template_nodes': 'identifier', 'instances': 'hostname'}
+    IDENTITY_FIELDS = {
+        'users': 'username',
+        'workflow_job_template_nodes': 'identifier',
+        'instances': 'hostname'
+    }
     ENCRYPTED_STRING = "$encrypted$"
 
     def __init__(self, argument_spec, direct_params=None, error_callback=None, warn_callback=None, **kwargs):
         kwargs['supports_check_mode'] = True
 
-        super(TowerAPIModule, self).__init__(
-            argument_spec=argument_spec, direct_params=direct_params, error_callback=error_callback, warn_callback=warn_callback, **kwargs
-        )
+        super(TowerAPIModule, self).__init__(argument_spec=argument_spec, direct_params=direct_params,
+                                             error_callback=error_callback, warn_callback=warn_callback, **kwargs)
         self.session = Request(cookies=CookieJar(), validate_certs=self.verify_ssl)
 
         if 'update_secrets' in self.params:
@@ -42,7 +43,11 @@ class TowerAPIModule(TowerModule):
 
     @staticmethod
     def param_to_endpoint(name):
-        exceptions = {'inventory': 'inventories', 'target_team': 'teams', 'workflow': 'workflow_job_templates'}
+        exceptions = {
+            'inventory': 'inventories',
+            'target_team': 'teams',
+            'workflow': 'workflow_job_templates'
+        }
         return exceptions.get(name, '{0}s'.format(name))
 
     @staticmethod
@@ -163,12 +168,14 @@ class TowerAPIModule(TowerModule):
         if len(sample['json']['results']) > 1:
             sample['json']['results'] = sample['json']['results'][:2] + ['...more results snipped...']
         url = self.build_url(endpoint, query_params)
-        display_endpoint = url.geturl()[len(self.host) :]  # truncate to not include the base URL
+        display_endpoint = url.geturl()[len(self.host):]  # truncate to not include the base URL
         self.fail_json(
-            msg="Request to {0} returned {1} items, expected 1".format(display_endpoint, response['json']['count']),
+            msg="Request to {0} returned {1} items, expected 1".format(
+                display_endpoint, response['json']['count']
+            ),
             query=query_params,
             response=sample,
-            total_results=response['json']['count'],
+            total_results=response['json']['count']
         )
 
     def get_exactly_one(self, endpoint, name_or_id=None, **kwargs):
@@ -208,11 +215,11 @@ class TowerAPIModule(TowerModule):
 
         try:
             response = self.session.open(method, url.geturl(), headers=headers, validate_certs=self.verify_ssl, follow_redirects=True, data=data)
-        except (SSLValidationError) as ssl_err:
+        except(SSLValidationError) as ssl_err:
             self.fail_json(msg="Could not establish a secure connection to your host ({1}): {0}.".format(url.netloc, ssl_err))
-        except (ConnectionError) as con_err:
+        except(ConnectionError) as con_err:
             self.fail_json(msg="There was a network error of some kind trying to connect to your host ({1}): {0}.".format(url.netloc, con_err))
-        except (HTTPError) as he:
+        except(HTTPError) as he:
             # Sanity check: Did the server send back some kind of internal error?
             if he.code >= 500:
                 self.fail_json(msg='The host sent back a server error ({1}): {0}. Please check the logs and try again later'.format(url.path, he))
@@ -247,7 +254,7 @@ class TowerAPIModule(TowerModule):
                 pass
             else:
                 self.fail_json(msg="Unexpected return code when calling {0}: {1}".format(url.geturl(), he))
-        except (Exception) as e:
+        except(Exception) as e:
             self.fail_json(msg="There was an unknown error when trying to connect to {2}: {0} {1}".format(type(e).__name__, e, url.geturl()))
 
         if not self.version_checked:
@@ -260,35 +267,27 @@ class TowerAPIModule(TowerModule):
                 tower_type = response.info().getheader('X-API-Product-Name', None)
                 tower_version = response.info().getheader('X-API-Product-Version', None)
 
-            parsed_collection_version = Version(self._COLLECTION_VERSION).version
-            parsed_tower_version = Version(tower_version).version
-            if tower_type == 'AWX':
-                collection_compare_ver = parsed_collection_version[0]
-                tower_compare_ver = parsed_tower_version[0]
-            else:
-                collection_compare_ver = "{0}.{1}".format(parsed_collection_version[0], parsed_collection_version[1])
-                tower_compare_ver = '{0}.{1}'.format(parsed_tower_version[0], parsed_tower_version[1])
-
             if self._COLLECTION_TYPE not in self.collection_to_version or self.collection_to_version[self._COLLECTION_TYPE] != tower_type:
-                self.warn("You are using the {0} version of this collection but connecting to {1}".format(self._COLLECTION_TYPE, tower_type))
-            elif collection_compare_ver != tower_compare_ver:
-                self.warn(
-                    "You are running collection version {0} but connecting to {2} version {1}".format(self._COLLECTION_VERSION, tower_version, tower_type)
-                )
-
+                self.warn("You are using the {0} version of this collection but connecting to {1}".format(
+                    self._COLLECTION_TYPE, tower_type
+                ))
+            elif self._COLLECTION_VERSION != tower_version:
+                self.warn("You are running collection version {0} but connecting to tower version {1}".format(
+                    self._COLLECTION_VERSION, tower_version
+                ))
             self.version_checked = True
 
         response_body = ''
         try:
             response_body = response.read()
-        except (Exception) as e:
+        except(Exception) as e:
             self.fail_json(msg="Failed to read response body: {0}".format(e))
 
         response_json = {}
         if response_body and response_body != '':
             try:
                 response_json = loads(response_body)
-            except (Exception) as e:
+            except(Exception) as e:
                 self.fail_json(msg="Failed to parse the response json: {0}".format(e))
 
         if PY2:
@@ -311,15 +310,10 @@ class TowerAPIModule(TowerModule):
 
             try:
                 response = self.session.open(
-                    'POST',
-                    api_token_url,
-                    validate_certs=self.verify_ssl,
-                    follow_redirects=True,
-                    force_basic_auth=True,
-                    url_username=self.username,
-                    url_password=self.password,
-                    data=dumps(login_data),
-                    headers={'Content-Type': 'application/json'},
+                    'POST', api_token_url,
+                    validate_certs=self.verify_ssl, follow_redirects=True,
+                    force_basic_auth=True, url_username=self.username, url_password=self.password,
+                    data=dumps(login_data), headers={'Content-Type': 'application/json'}
                 )
             except HTTPError as he:
                 try:
@@ -327,7 +321,7 @@ class TowerAPIModule(TowerModule):
                 except Exception as e:
                     resp = 'unknown {0}'.format(e)
                 self.fail_json(msg='Failed to get token: {0}'.format(he), response=resp)
-            except (Exception) as e:
+            except(Exception) as e:
                 # Sanity check: Did the server send back some kind of internal error?
                 self.fail_json(msg='Failed to get token: {0}'.format(e))
 
@@ -337,13 +331,13 @@ class TowerAPIModule(TowerModule):
                 response_json = loads(token_response)
                 self.oauth_token_id = response_json['id']
                 self.oauth_token = response_json['token']
-            except (Exception) as e:
+            except(Exception) as e:
                 self.fail_json(msg="Failed to extract token information from login response: {0}".format(e), **{'response': token_response})
 
         # If we have neither of these, then we can try un-authenticated access
         self.authenticated = True
 
-    def delete_if_needed(self, existing_item, on_delete=None, auto_exit=True):
+    def delete_if_needed(self, existing_item, on_delete=None):
         # This will exit from the module on its own.
         # If the method successfully deletes an item and on_delete param is defined,
         #   the on_delete parameter will be called as a method pasing in this object and the json from the response
@@ -369,10 +363,6 @@ class TowerAPIModule(TowerModule):
                 self.json_output['changed'] = True
                 self.json_output['id'] = item_id
                 self.exit_json(**self.json_output)
-                if auto_exit:
-                    self.exit_json(**self.json_output)
-                else:
-                    return self.json_output
             else:
                 if 'json' in response and '__all__' in response['json']:
                     self.fail_json(msg="Unable to delete {0} {1}: {2}".format(item_type, item_name, response['json']['__all__'][0]))
@@ -385,10 +375,7 @@ class TowerAPIModule(TowerModule):
                 else:
                     self.fail_json(msg="Unable to delete {0} {1}: {2}".format(item_type, item_name, response['status_code']))
         else:
-            if auto_exit:
-                self.exit_json(**self.json_output)
-            else:
-                return self.json_output
+            self.exit_json(**self.json_output)
 
     def modify_associations(self, association_endpoint, new_association_list):
         # if we got None instead of [] we are not modifying the association_list
@@ -406,7 +393,7 @@ class TowerAPIModule(TowerModule):
             if response['status_code'] == 204:
                 self.json_output['changed'] = True
             else:
-                self.fail_json(msg="Failed to disassociate item {0}".format(response['json'].get('detail', response['json'])))
+                self.fail_json(msg="Failed to disassociate item {0}".format(response['json']['detail']))
 
         # Associate anything that is in new_association_list but not in `association`
         for an_id in list(set(new_association_list) - set(existing_associated_ids)):
@@ -414,58 +401,9 @@ class TowerAPIModule(TowerModule):
             if response['status_code'] == 204:
                 self.json_output['changed'] = True
             else:
-                self.fail_json(msg="Failed to associate item {0}".format(response['json'].get('detail', response['json'])))
+                self.fail_json(msg="Failed to associate item {0}".format(response['json']['detail']))
 
-    def copy_item(self, existing_item, copy_from_name_or_id, new_item_name, endpoint=None, item_type='unknown', copy_lookup_data=None):
-
-        if existing_item is not None:
-            self.warn(msg="A {0} with the name {1} already exists.".format(item_type, new_item_name))
-            self.json_output['changed'] = False
-            self.json_output['copied'] = False
-            return existing_item
-
-        # Lookup existing item to copy from
-        copy_from_lookup = self.get_one(endpoint, name_or_id=copy_from_name_or_id, **{'data': copy_lookup_data})
-
-        # Fail if the copy_from_lookup is empty
-        if copy_from_lookup is None:
-            self.fail_json(msg="A {0} with the name {1} was not able to be found.".format(item_type, copy_from_name_or_id))
-
-        # Do checks for copy permisions if warrented
-        if item_type == 'workflow_job_template':
-            copy_get_check = self.get_endpoint(copy_from_lookup['related']['copy'])
-            if copy_get_check['status_code'] in [200]:
-                if (
-                    copy_get_check['json']['can_copy']
-                    and copy_get_check['json']['can_copy_without_user_input']
-                    and not copy_get_check['json']['templates_unable_to_copy']
-                    and not copy_get_check['json']['credentials_unable_to_copy']
-                    and not copy_get_check['json']['inventories_unable_to_copy']
-                ):
-                    # Because checks have passed
-                    self.json_output['copy_checks'] = 'passed'
-                else:
-                    self.fail_json(msg="Unable to copy {0} {1} error: {2}".format(item_type, copy_from_name_or_id, copy_get_check))
-            else:
-                self.fail_json(msg="Error accessing {0} {1} error: {2} ".format(item_type, copy_from_name_or_id, copy_get_check))
-
-        response = self.post_endpoint(copy_from_lookup['related']['copy'], **{'data': {'name': new_item_name}})
-
-        if response['status_code'] in [201]:
-            self.json_output['id'] = response['json']['id']
-            self.json_output['changed'] = True
-            self.json_output['copied'] = True
-            new_existing_item = response['json']
-        else:
-            if 'json' in response and '__all__' in response['json']:
-                self.fail_json(msg="Unable to create {0} {1}: {2}".format(item_type, new_item_name, response['json']['__all__'][0]))
-            elif 'json' in response:
-                self.fail_json(msg="Unable to create {0} {1}: {2}".format(item_type, new_item_name, response['json']))
-            else:
-                self.fail_json(msg="Unable to create {0} {1}: {2}".format(item_type, new_item_name, response['status_code']))
-        return new_existing_item
-
-    def create_if_needed(self, existing_item, new_item, endpoint, on_create=None, auto_exit=True, item_type='unknown', associations=None):
+    def create_if_needed(self, existing_item, new_item, endpoint, on_create=None, item_type='unknown', associations=None):
 
         # This will exit from the module on its own
         # If the method successfully creates an item and on_create param is defined,
@@ -492,9 +430,7 @@ class TowerAPIModule(TowerModule):
             item_name = self.get_item_name(new_item, allow_unknown=True)
 
             response = self.post_endpoint(endpoint, **{'data': new_item})
-
-            # 200 is response from approval node creation on tower 3.7.3 or awx 15.0.0 or earlier.
-            if response['status_code'] in [200, 201]:
+            if response['status_code'] == 201:
                 self.json_output['name'] = 'unknown'
                 for key in ('name', 'username', 'identifier', 'hostname'):
                     if key in response['json']:
@@ -519,11 +455,8 @@ class TowerAPIModule(TowerModule):
         # If we have an on_create method and we actually changed something we can call on_create
         if on_create is not None and self.json_output['changed']:
             on_create(self, response['json'])
-        elif auto_exit:
-            self.exit_json(**self.json_output)
         else:
-            last_data = response['json']
-            return last_data
+            self.exit_json(**self.json_output)
 
     def _encrypted_changed_warning(self, field, old, warning=False):
         if not warning:
@@ -531,8 +464,7 @@ class TowerAPIModule(TowerModule):
         self.warn(
             'The field {0} of {1} {2} has encrypted data and may inaccurately report task is changed.'.format(
                 field, old.get('type', 'unknown'), old.get('id', 'unknown')
-            )
-        )
+            ))
 
     @staticmethod
     def has_encrypted_values(obj):
@@ -586,7 +518,7 @@ class TowerAPIModule(TowerModule):
                     return True
         return False
 
-    def update_if_needed(self, existing_item, new_item, on_update=None, auto_exit=True, associations=None):
+    def update_if_needed(self, existing_item, new_item, on_update=None, associations=None):
         # This will exit from the module on its own
         # If the method successfully updates an item and on_update param is defined,
         #   the on_update parameter will be called as a method pasing in this object and the json from the response
@@ -623,7 +555,8 @@ class TowerAPIModule(TowerModule):
                 if response['status_code'] == 200:
                     # compare apples-to-apples, old API data to new API data
                     # but do so considering the fields given in parameters
-                    self.json_output['changed'] = self.objects_could_be_different(existing_item, response['json'], field_set=new_item.keys(), warning=True)
+                    self.json_output['changed'] = self.objects_could_be_different(
+                        existing_item, response['json'], field_set=new_item.keys(), warning=True)
                 elif 'json' in response and '__all__' in response['json']:
                     self.fail_json(msg=response['json']['__all__'])
                 else:
@@ -645,24 +578,14 @@ class TowerAPIModule(TowerModule):
             else:
                 last_data = response['json']
             on_update(self, last_data)
-        elif auto_exit:
+        else:
             self.exit_json(**self.json_output)
-        else:
-            if response is None:
-                last_data = existing_item
-            else:
-                last_data = response['json']
-            return last_data
 
-    def create_or_update_if_needed(
-        self, existing_item, new_item, endpoint=None, item_type='unknown', on_create=None, on_update=None, auto_exit=True, associations=None
-    ):
+    def create_or_update_if_needed(self, existing_item, new_item, endpoint=None, item_type='unknown', on_create=None, on_update=None, associations=None):
         if existing_item:
-            return self.update_if_needed(existing_item, new_item, on_update=on_update, auto_exit=auto_exit, associations=associations)
+            return self.update_if_needed(existing_item, new_item, on_update=on_update, associations=associations)
         else:
-            return self.create_if_needed(
-                existing_item, new_item, endpoint, on_create=on_create, item_type=item_type, auto_exit=auto_exit, associations=associations
-            )
+            return self.create_if_needed(existing_item, new_item, endpoint, on_create=on_create, item_type=item_type, associations=associations)
 
     def logout(self):
         if self.authenticated and self.oauth_token_id:
@@ -670,7 +593,8 @@ class TowerAPIModule(TowerModule):
             # Post to the tokens endpoint with baisc auth to try and get a token
             api_token_url = (
                 self.url._replace(
-                    path='/api/v2/tokens/{0}/'.format(self.oauth_token_id), query=None  # in error cases, fail_json exists before exception handling
+                    path='/api/v2/tokens/{0}/'.format(self.oauth_token_id),
+                    query=None  # in error cases, fail_json exists before exception handling
                 )
             ).geturl()
 
@@ -682,7 +606,7 @@ class TowerAPIModule(TowerModule):
                     follow_redirects=True,
                     force_basic_auth=True,
                     url_username=self.username,
-                    url_password=self.password,
+                    url_password=self.password
                 )
                 self.oauth_token_id = None
                 self.authenticated = False
@@ -692,7 +616,7 @@ class TowerAPIModule(TowerModule):
                 except Exception as e:
                     resp = 'unknown {0}'.format(e)
                 self.warn('Failed to release tower token: {0}, response: {1}'.format(he, resp))
-            except (Exception) as e:
+            except(Exception) as e:
                 # Sanity check: Did the server send back some kind of internal error?
                 self.warn('Failed to release tower token {0}: {1}'.format(self.oauth_token_id, e))
 

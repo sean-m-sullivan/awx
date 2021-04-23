@@ -4,10 +4,11 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
-ANSIBLE_METADATA = {'metadata_version': '1.0', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.0',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 DOCUMENTATION = '''
 ---
@@ -34,7 +35,6 @@ options:
     wait:
       description:
         - Wait for the project to update.
-        - If scm revision has not changed module will return not changed.
       default: True
       type: bool
     interval:
@@ -48,7 +48,7 @@ options:
         - If waiting for the project to update this will abort after this
           amount of seconds
       type: int
-extends_documentation_fragment: awx.awx.auth
+extends_documentation_fragment: ansible.tower.auth
 '''
 
 RETURN = '''
@@ -110,9 +110,6 @@ def main():
     if project is None:
         module.fail_json(msg="Unable to find project")
 
-    if wait:
-        scm_revision_original = project['scm_revision']
-
     # Update the project
     result = module.post_endpoint(project['related']['update'])
 
@@ -129,13 +126,16 @@ def main():
     # Grab our start time to compare against for the timeout
     start = time.time()
 
+    if not wait:
+        module.exit_json(**module.json_output)
+
     # Invoke wait function
-    result = module.wait_on_url(
-        url=result['json']['url'], object_name=module.get_item_name(project), object_type='Project Update', timeout=timeout, interval=interval
+    module.wait_on_url(
+        url=result['json']['url'],
+        object_name=module.get_item_name(project),
+        object_type='Project Update',
+        timeout=timeout, interval=interval
     )
-    scm_revision_new = result['json']['scm_revision']
-    if scm_revision_new == scm_revision_original:
-        module.json_output['changed'] = False
 
     module.exit_json(**module.json_output)
 

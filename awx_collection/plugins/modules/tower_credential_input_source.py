@@ -5,11 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 
 DOCUMENTATION = '''
@@ -52,7 +53,7 @@ options:
       default: "present"
       type: str
 
-extends_documentation_fragment: awx.awx.auth
+extends_documentation_fragment: ansible.tower.auth
 '''
 
 
@@ -75,10 +76,10 @@ from ..module_utils.tower_api import TowerAPIModule
 def main():
     # Any additional arguments that are not fields of the item can be added here
     argument_spec = dict(
-        description=dict(),
+        description=dict(default=''),
         input_field_name=dict(required=True),
         target_credential=dict(required=True),
-        source_credential=dict(),
+        source_credential=dict(default=''),
         metadata=dict(type="dict"),
         state=dict(choices=['present', 'absent'], default='present'),
     )

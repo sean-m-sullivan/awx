@@ -5,11 +5,12 @@
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'], 'supported_by': 'community'}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
 
 DOCUMENTATION = '''
@@ -21,16 +22,14 @@ description:
     - Update Ansible Tower inventory source(s). See
       U(https://www.ansible.com/tower) for an overview.
 options:
-    name:
-      description:
-        - The name or id of the inventory source to update.
-      required: True
-      type: str
-      aliases:
-        - inventory_source
     inventory:
       description:
-        - Name or id of the inventory that contains the inventory source(s) to update.
+        - Name of the inventory that contains the inventory source(s) to update.
+      required: True
+      type: str
+    inventory_source:
+      description:
+        - The name of the inventory source to update.
       required: True
       type: str
     organization:
@@ -53,20 +52,20 @@ options:
         - If waiting for the job to complete this will abort after this
           amount of seconds
       type: int
-extends_documentation_fragment: awx.awx.auth
+extends_documentation_fragment: ansible.tower.auth
 '''
 
 EXAMPLES = '''
 - name: Update a single inventory source
   tower_inventory_source_update:
-    name: "Example Inventory Source"
     inventory: "My Inventory"
+    inventory_source: "Example Inventory Source"
     organization: Default
 
 - name: Update all inventory sources
   tower_inventory_source_update:
-    name: "{{ item }}"
     inventory: "My Other Inventory"
+    inventory_source: "{{ item }}"
   loop: "{{ query('awx.awx.tower_api', 'inventory_sources', query_params={ 'inventory': 30 }, return_ids=True ) }}"
 '''
 
@@ -89,8 +88,8 @@ from ..module_utils.tower_api import TowerAPIModule
 def main():
     # Any additional arguments that are not fields of the item can be added here
     argument_spec = dict(
-        name=dict(required=True, aliases=['inventory_source']),
         inventory=dict(required=True),
+        inventory_source=dict(required=True),
         organization=dict(),
         wait=dict(default=False, type='bool'),
         interval=dict(default=1.0, type='float'),
@@ -101,31 +100,36 @@ def main():
     module = TowerAPIModule(argument_spec=argument_spec)
 
     # Extract our parameters
-    name = module.params.get('name')
     inventory = module.params.get('inventory')
+    inventory_source = module.params.get('inventory_source')
     organization = module.params.get('organization')
     wait = module.params.get('wait')
     interval = module.params.get('interval')
     timeout = module.params.get('timeout')
 
-    lookup_data = {}
+    lookup_data = {'name': inventory}
     if organization:
         lookup_data['organization'] = module.resolve_name_to_id('organizations', organization)
-    inventory_object = module.get_one('inventories', name_or_id=inventory, data=lookup_data)
+    inventory_object = module.get_one('inventories', data=lookup_data)
 
     if not inventory_object:
         module.fail_json(msg='The specified inventory, {0}, was not found.'.format(lookup_data))
 
-    inventory_source_object = module.get_one('inventory_sources', name_or_id=name, data={'inventory': inventory_object['id']})
+    inventory_source_object = module.get_one('inventory_sources', **{
+        'data': {
+            'name': inventory_source,
+            'inventory': inventory_object['id'],
+        }
+    })
 
     if not inventory_source_object:
         module.fail_json(msg='The specified inventory source was not found.')
 
     # Sync the inventory source(s)
-    inventory_source_update_results = module.post_endpoint(inventory_source_object['related']['update'])
+    inventory_source_update_results = module.post_endpoint(inventory_source_object['related']['update'], **{'data': {}})
 
     if inventory_source_update_results['status_code'] != 202:
-        module.fail_json(msg="Failed to update inventory source, see response for details", response=inventory_source_update_results)
+        module.fail_json(msg="Failed to update inventory source, see response for details", **{'response': inventory_source_update_results})
 
     module.json_output['changed'] = True
     module.json_output['id'] = inventory_source_update_results['json']['id']
@@ -136,7 +140,10 @@ def main():
 
     # Invoke wait function
     module.wait_on_url(
-        url=inventory_source_update_results['json']['url'], object_name=inventory_object, object_type='inventory_update', timeout=timeout, interval=interval
+        url=inventory_source_update_results['json']['url'],
+        object_name=inventory_object,
+        object_type='inventory_update',
+        timeout=timeout, interval=interval
     )
 
     module.exit_json(**module.json_output)

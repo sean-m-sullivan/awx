@@ -6,11 +6,12 @@
 # (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'status': ['preview'], 'supported_by': 'community', 'metadata_version': '1.1'}
+ANSIBLE_METADATA = {'status': ['preview'],
+                    'supported_by': 'community',
+                    'metadata_version': '1.1'}
 
 
 DOCUMENTATION = '''
@@ -57,7 +58,7 @@ options:
       default: "present"
       choices: ["present", "absent"]
       type: str
-extends_documentation_fragment: awx.awx.auth
+extends_documentation_fragment: ansible.tower.auth
 '''
 
 
@@ -82,7 +83,14 @@ RETURN = ''' # '''
 
 from ..module_utils.tower_api import TowerAPIModule
 
-KIND_CHOICES = {'ssh': 'Machine', 'vault': 'Ansible Vault', 'net': 'Network', 'scm': 'Source Control', 'cloud': 'Lots of others', 'insights': 'Insights'}
+KIND_CHOICES = {
+    'ssh': 'Machine',
+    'vault': 'Ansible Vault',
+    'net': 'Network',
+    'scm': 'Source Control',
+    'cloud': 'Lots of others',
+    'insights': 'Insights'
+}
 
 
 def main():

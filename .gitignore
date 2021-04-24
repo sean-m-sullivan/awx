@@ -8,7 +8,6 @@ reference-schema.json
 .tags1
 
 # Tower
-awx_collection/backport_details
 awx-dev
 awx/settings/local_*.py*
 awx/*.sqlite3

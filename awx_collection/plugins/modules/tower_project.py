@@ -279,7 +279,7 @@ def main():
     credential = module.params.get('credential')
     scm_update_on_launch = module.params.get('scm_update_on_launch')
     scm_update_cache_timeout = module.params.get('scm_update_cache_timeout')
-    default_ee = module.params.get('default_environment')
+    custom_virtualenv = module.params.get('default_environment')
     organization = module.params.get('organization')
     state = module.params.get('state')
     wait = module.params.get('wait')
@@ -364,8 +364,6 @@ def main():
 
     if credential is not None:
         project_fields['credential'] = credential
-    if default_ee is not None:
-        project_fields['default_environment'] = module.resolve_name_to_id('execution_environments', default_ee)
     if scm_type == '':
         if local_path is not None:
             project_fields['local_path'] = local_path

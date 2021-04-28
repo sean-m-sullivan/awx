@@ -574,7 +574,7 @@ def create_schema_nodes(module, response, schema, workflow_id):
                 existing_item = module.get_endpoint(workflow_job_template_node['related']['unified_job_template'])['json']
             approval_endpoint = 'workflow_job_template_nodes/{0}/create_approval_template/'.format(workflow_job_template_node_id)
 
-            module.create_or_update_if_needed(
+            module.create_if_needed(
                 existing_item,
                 workflow_node_fields,
                 endpoint=approval_endpoint,

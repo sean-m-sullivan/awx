@@ -32,6 +32,7 @@ EXPORTABLE_RELATIONS = [
     'NotificationTemplates',
     'WorkflowJobTemplateNodes',
     'Credentials',
+    'GalaxyCredentials',
     'Hosts',
     'Groups',
     'ExecutionEnvironments',
@@ -114,6 +115,7 @@ class ApiV2(base.Base):
                 log.warning("Foreign key %r export failed for object %s, setting to null", key, _page.endpoint)
                 continue
             rel_natural_key = rel_endpoint.get_natural_key(self._cache)
+            
             if rel_natural_key is None:
                 log.error("Unable to construct a natural key for foreign key %r of object %s.", key, _page.endpoint)
                 return None  # This foreign key has unresolvable dependencies
@@ -121,11 +123,15 @@ class ApiV2(base.Base):
 
         related = {}
         for key, rel_endpoint in _page.related.items():
+            log.error("key %r is_relation %s.", key, rel_endpoint)
             if key in post_fields or not rel_endpoint:
                 continue
 
             rel = rel_endpoint._create()
             is_relation = rel.__class__.__name__ in EXPORTABLE_RELATIONS
+#            log.error("key %r is_relation %s.", key, is_relation)
+            log.error("class %r export %s.", rel.__class__, EXPORTABLE_RELATIONS)
+#            log.error("key %r is_relation export %s.", rel.__class__.__name__, EXPORTABLE_RELATIONS)
             is_dependent = (_page.__item_class__.__name__, key) in DEPENDENT_EXPORT
             is_blocked = (_page.__item_class__.__name__, key) in DEPENDENT_NONEXPORT
             if is_blocked or not (is_relation or is_dependent):

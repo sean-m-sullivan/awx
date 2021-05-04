@@ -150,10 +150,13 @@ class URLRegistry(object):
         for re_key in self.store:
             if re_key.match(url):
                 keys = list(self.store[re_key])
+                log.error("keys %r", keys)
                 keys.sort(key=lambda x: x.pattern == '.*')
                 for method_key in keys:
                     if method_key.match(method):
                         registered_type = self.store[re_key][method_key]
                         break
-        log.debug('Retrieved {} by url: {}'.format(registered_type, url))
+        log.error('Retrieved {} by url: {}'.format(registered_type, url))
+        log.error("get %r", url)
+
         return registered_type

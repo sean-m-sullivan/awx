@@ -1,6 +1,6 @@
 from contextlib import suppress
 
-from awxkit.api.mixins import HasCreate, HasInstanceGroups, HasNotifications, DSAdapter
+from awxkit.api.mixins import HasCreate, HasInstanceGroups, HasNotifications, HasGalaxyCredentials, DSAdapter
 from awxkit.utils import random_title, set_payload_foreign_key_args, PseudoNamespace
 from awxkit.api.resources import resources
 import awxkit.exceptions as exc
@@ -8,7 +8,7 @@ from . import base
 from . import page
 
 
-class Organization(HasCreate, HasInstanceGroups, HasNotifications, base.Base):
+class Organization(HasCreate, HasInstanceGroups, HasNotifications, HasGalaxyCredentials, base.Base):
 
     NATURAL_KEY = ('name',)
 

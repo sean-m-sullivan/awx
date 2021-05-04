@@ -142,6 +142,7 @@ class Resources(object):
     _organization_execution_environments = r'organizations/\d+/execution_environments/'
     _organization_inventories = r'organizations/\d+/inventories/'
     _organization_users = r'organizations/\d+/users/'
+    _organization_galaxy_credentials = r'organizations/\d+/galaxy_credentials/'
     _organizations = 'organizations/'
     _ping = 'ping/'
     _project = r'projects/\d+/'

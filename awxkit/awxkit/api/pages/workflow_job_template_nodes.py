@@ -37,6 +37,8 @@ class WorkflowJobTemplateNode(HasCreate, base.Base):
             'forks',
             'timeout',
             'execution_environment',
+            'label',
+            'instance_group',
         )
 
         update_payload(payload, optional_fields, kwargs)

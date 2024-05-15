@@ -58,9 +58,10 @@ options:
       elements: str
     state:
       description:
-        - Desired state of the resource.
+        - Desired state of the resource. C(exists) will not modify the resource if it is present.
+        - Enforced state C(enforced) will use default values of any option not provided.
       default: "present"
-      choices: ["present", "absent", "exists"]
+      choices: ["present", "absent", "exists", "enforced"]
       type: str
     skip_authorization:
       description:
@@ -106,7 +107,7 @@ def main():
         client_type=dict(choices=['public', 'confidential']),
         organization=dict(required=True),
         redirect_uris=dict(type="list", elements='str'),
-        state=dict(choices=['present', 'absent', 'exists'], default='present'),
+        state=dict(choices=['present', 'absent', 'exists', 'enforced'], default='present'),
         skip_authorization=dict(type='bool'),
     )
 
@@ -132,22 +133,30 @@ def main():
     if state == 'absent':
         # If the state was absent we can let the module delete it if needed, the module will handle exiting from this
         module.delete_if_needed(application)
+    elif state == 'enforced':
+        endpoint_defaults = module.get_options_endpoint('applications')
+        new_fields = {
+            'description': endpoint_defaults['description']['default'],
+            'skip_authorization': endpoint_defaults['skip_authorization']['default'],
+        }
+    else:
+        new_fields = {}
 
     # Create the data that gets sent for create and update
-    application_fields = {
-        'name': new_name if new_name else (module.get_item_name(application) if application else name),
-        'organization': org_id,
-    }
+    new_fields['name'] = new_name if new_name else (module.get_item_name(application) if application else name)
+    new_fields['organization'] = org_id
     if authorization_grant_type is not None:
-        application_fields['authorization_grant_type'] = authorization_grant_type
+        new_fields['authorization_grant_type'] = authorization_grant_type
     if client_type is not None:
-        application_fields['client_type'] = client_type
+        new_fields['client_type'] = client_type
     if description is not None:
-        application_fields['description'] = description
+        new_fields['description'] = description
     if redirect_uris is not None:
-        application_fields['redirect_uris'] = ' '.join(redirect_uris)
+        new_fields['redirect_uris'] = ' '.join(redirect_uris)
 
-    response = module.create_or_update_if_needed(application, application_fields, endpoint='applications', item_type='application', auto_exit=False)
+    module.fail_json(msg="test: {0}".format(new_fields))
+
+    response = module.create_or_update_if_needed(application, new_fields, endpoint='applications', item_type='application', auto_exit=False)
     if 'client_id' in response:
         module.json_output['client_id'] = response['client_id']
     if 'client_secret' in response:
